@@ -115,6 +115,9 @@ def send_email():
         smtp_port = os.environ.get('MAIL_PORT', '587')
         smtp_secure = os.environ.get('MAIL_SECURE', 'starttls')
 
+        print("DEBUG EMAIL:", sender_email)
+        print("DEBUG PASS:", sender_password)
+
         if not sender_email or not sender_password:
             return jsonify({'error': 'لم يتم إعداد بريد المرسل أو كلمة المرور في backend/.env.'}), 500
 
@@ -140,7 +143,7 @@ def send_email():
 
 @app.route('/favicon.ico')
 def favicon():
-    return '', 204
+    return '', 204  
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
