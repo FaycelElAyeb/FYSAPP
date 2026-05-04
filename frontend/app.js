@@ -47,24 +47,23 @@ analyzeBtn.addEventListener('click', async () => {
   try {
     await new Promise(r => setTimeout(r, 300));
 
-    // قراءة الملفين - يدعم CSV و XLS و XLSX
-    let gbData, anData;
-    try {
-      gbData = await readExcel(gradebookInput.files[0]);
-    } catch(e) {
-      throw new Error('خطأ في ملف Gradebook: ' + e.message);
-    }
-    try {
-      anData = await readExcel(analyticsInput.files[0]);
-    } catch(e) {
-      throw new Error('خطأ في ملف Analytics: ' + e.message);
-    }
+    // إرسال الملفات إلى Flask backend
+const formData = new FormData();
+formData.append("gradebook", gradebookInput.files[0]);
+formData.append("analytics", analyticsInput.files[0]);
 
-    // التحقق من وجود بيانات
-    if (!gbData.length) throw new Error('ملف Gradebook فارغ أو لا يحتوي على بيانات');
-    if (!anData.length) throw new Error('ملف Analytics فارغ أو لا يحتوي على بيانات');
+const res = await fetch("/api/analyze", {
+  method: "POST",
+  body: formData
+});
 
-    reportData   = analyze(gbData, anData);
+if (!res.ok) {
+  throw new Error("فشل الاتصال بالخادم");
+}
+
+reportData = await res.json();
+    
+   
     allStudents  = reportData.students;
     renderReport(reportData);
     uploadSection.style.display = 'none';

@@ -361,22 +361,22 @@ class AcademicAnalyzer:
         students.sort(key=lambda x: (-x['risk_score'], x['name']))
 
         return {
-            'summary': {
-                'total_students': total_students,
-                'at_risk_count': at_risk_count,
-                'safe_count': total_students - at_risk_count,
-                'avg_grade': round(avg_grade, 1),
-                'pass_rate': round(pass_rate, 1),
-                'avg_hours': round(float(df['hours_spent'].mean()), 1),
-                'avg_missed': round(float(df['missed_deadlines'].mean()), 1),
-                'avg_days_access': round(float(df['days_since_access'].mean()), 1),
-            },
-            'risk_distribution': risk_dist,
-            'engagement_distribution': engagement_dist,
-            'trend_distribution': trend_dist,
-            'grade_distribution': grade_dist,
-            'students': students,
-        }
+    'summary': {
+        'total': total_students,
+        'atRisk': at_risk_count,
+        'safe': total_students - at_risk_count,
+        'avgGrade': round(avg_grade, 1),
+        'passRate': round(pass_rate, 1),
+        'avgHours': round(float(df['hours_spent'].mean()), 1),
+        'avgMissed': round(float(df['missed_deadlines'].mean()), 1),
+        'avgDays': round(float(df['days_since_access'].mean()), 1),
+    },
+    'riskDist': risk_dist,
+    'engDist': engagement_dist,
+    'trendDist': trend_dist,
+    'gradeDist': grade_dist,
+    'students': students,
+}
 
     # ------------------------------------------------------------------ #
     #  EXCEL EXPORT

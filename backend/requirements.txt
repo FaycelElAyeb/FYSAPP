@@ -8,6 +8,5 @@ xlrd
 lxml
 xlsxwriter
 python-dateutil
-werkzeug
 yagmail
 python-dotenv

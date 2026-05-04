@@ -1,10 +1,13 @@
+import os
+from flask import send_file
 from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
 import os
 import traceback
 from analyzer import AcademicAnalyzer
 from dotenv import load_dotenv
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_FOLDER = os.path.join(BASE_DIR, '../frontend')
 # Load environment variables from .env file
 load_dotenv()
 
@@ -15,7 +18,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 
 UPLOAD_FOLDER = 'uploads'
 REPORTS_FOLDER = 'reports'
-FRONTEND_FOLDER = '../frontend'
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(REPORTS_FOLDER, exist_ok=True)
 
@@ -24,24 +27,14 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
 
 
 @app.route('/')
-def index():
-    """Serve the main HTML page"""
-    index_path = os.path.join(FRONTEND_FOLDER, 'index.html')
-    return send_file(index_path)
+def home():
+    return send_file(os.path.join(FRONTEND_FOLDER, 'login.html'))
 
-
-@app.route('/style.css')
-def style():
-    """Serve the CSS file"""
-    css_path = os.path.join(FRONTEND_FOLDER, 'style.css')
-    return send_file(css_path, mimetype='text/css')
-
-
-@app.route('/app.js')
-def app_js():
-    """Serve the JavaScript file"""
-    js_path = os.path.join(FRONTEND_FOLDER, 'app.js')
-    return send_file(js_path, mimetype='application/javascript')
+@app.route('/<path:path>')
+def serve_frontend(path):
+    if path.startswith("api"):
+        return {"error": "Not found"}, 404
+    return send_file(os.path.join(FRONTEND_FOLDER, path))
 
 
 @app.route('/api/health', methods=['GET'])
@@ -50,33 +43,30 @@ def health():
 
 
 @app.route('/api/analyze', methods=['POST'])
-def analyze():
+def analyze_api():
     try:
         if 'gradebook' not in request.files or 'analytics' not in request.files:
-            return jsonify({'error': 'يرجى رفع كلا الملفين: Gradebook و Analytics'}), 400
+            return jsonify({'error': 'Files missing'}), 400
 
         gradebook_file = request.files['gradebook']
         analytics_file = request.files['analytics']
 
-        if gradebook_file.filename == '' or analytics_file.filename == '':
-            return jsonify({'error': 'لم يتم اختيار الملفات'}), 400
+        gb_path = os.path.join('temp_gb.xlsx')
+        an_path = os.path.join('temp_an.xlsx')
 
-        # Save uploaded files
-        gradebook_path = os.path.join(UPLOAD_FOLDER, 'gradebook.xlsx')
-        analytics_path = os.path.join(UPLOAD_FOLDER, 'analytics.xlsx')
-        gradebook_file.save(gradebook_path)
-        analytics_file.save(analytics_path)
+        gradebook_file.save(gb_path)
+        analytics_file.save(an_path)
 
-        # Run analysis
-        analyzer = AcademicAnalyzer(gradebook_path, analytics_path)
-        report = analyzer.generate_full_report()
+        analyzer = AcademicAnalyzer(gb_path, an_path)
 
-        return jsonify(report)
+        report = analyzer.generate_full_report()   # ✅ VERY IMPORTANT
+
+        return jsonify(report)  # ✅ THIS FIXES YOUR ISSUE
 
     except Exception as e:
+        import traceback
         traceback.print_exc()
-        return jsonify({'error': f'خطأ في التحليل: {str(e)}'}), 500
-
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/download-report', methods=['POST'])
 def download_report():
@@ -148,6 +138,9 @@ def send_email():
         traceback.print_exc()
         return jsonify({'error': f'خطأ في توليد التقرير: {str(e)}'}), 500
 
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)
